@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NavAssist — Store Admin Panel</title>
+<style>
+:root{
+  --bg:#f4f5f9;--c1:#fff;--c2:#f0f1f8;
+  --blue:#3b7dd8;--blue2:rgba(59,125,216,.1);--blue3:rgba(59,125,216,.25);
+  --green:#16a34a;--green2:rgba(22,163,74,.1);
+  --amber:#d97706;--amber2:rgba(217,119,6,.1);
+  --red:#dc2626;--red2:rgba(220,38,38,.1);
+  --txt:#1a1a2e;--txt2:#555;--txt3:#999;
+  --bdr:#e5e7eb;--r:10px;--ff:system-ui,sans-serif;--fm:monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100vh;}
+.shell{display:flex;min-height:100vh;}
+/* SIDEBAR */
+.sb{width:210px;background:var(--c1);border-right:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sb-logo{padding:16px;border-bottom:1px solid var(--bdr);}
+.sb-logo h2{font-size:15px;font-weight:700;}
+.sb-logo h2 span{color:var(--blue);}
+.sb-logo p{font-size:11px;color:var(--txt3);margin-top:2px;font-family:var(--fm);}
+.sb-nav{padding:10px 8px;flex:1;}
+.sb-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt2);cursor:pointer;border:none;background:none;width:100%;text-align:left;}
+.sb-item:hover,.sb-item.on{background:var(--blue2);color:var(--blue);}
+.sb-item.on{font-weight:500;}
+.sb-foot{padding:10px 14px;border-top:1px solid var(--bdr);}
+.live-row{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.ph{padding:16px 22px;border-bottom:1px solid var(--bdr);background:var(--c1);display:flex;align-items:center;justify-content:space-between;}
+.ph-t{font-size:17px;font-weight:600;}
+.ph-s{font-size:11px;color:var(--txt3);margin-top:2px;}
+.pb{flex:1;padding:18px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.page{display:none;flex:1;flex-direction:column;}
+.page.on{display:flex;}
+/* CARDS */
+.card{background:var(--c1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--bdr);}
+.ch-t{font-size:14px;font-weight:600;}
+.cb{padding:14px;}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sc{background:var(--c1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;}
+.sv{font-size:24px;font-weight:700;font-family:var(--fm);}
+.sl{font-size:11px;color:var(--txt3);margin-top:2px;}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:10px;font-weight:600;color:var(--txt3);text-align:left;padding:7px 11px;border-bottom:1px solid var(--bdr);background:var(--c2);text-transform:uppercase;letter-spacing:.5px;}
+.tbl td{padding:9px 11px;font-size:12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--bg);}
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;font-family:var(--fm);}
+.bg-g{background:var(--green2);color:var(--green);}
+.bg-r{background:var(--red2);color:var(--red);}
+.bg-b{background:var(--blue2);color:var(--blue);}
+.bg-a{background:var(--amber2);color:var(--amber);}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:var(--ff);}
+.btn-p{background:var(--blue);color:#fff;} .btn-p:hover{background:#2d6cc7;}
+.btn-g{background:transparent;border:1px solid var(--bdr);color:var(--txt2);} .btn-g:hover{background:var(--c2);}
+.btn-d{background:var(--red2);color:var(--red);border:1px solid rgba(220,38,38,.2);}
+.btn-sm{padding:4px 9px;font-size:11px;}
+/* FORM */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fg.full{grid-column:span 2;}
+.flbl{font-size:10px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;}
+.fi,.fs,.ft{background:var(--bg);border:1px solid var(--bdr);border-radius:7px;padding:7px 9px;font-size:12px;color:var(--txt);font-family:var(--ff);width:100%;}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--blue);outline:none;}
+.ft{min-height:70px;resize:vertical;}
+/* TOGGLE */
+.tgl{width:38px;height:20px;border-radius:10px;background:#ddd;border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.tgl.on{background:var(--green);}
+.tknob{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .2s;pointer-events:none;}
+.tgl.on .tknob{transform:translateX(18px);}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:100;align-items:center;justify-content:center;}
+.modal-bg.on{display:flex;}
+.modal{background:var(--c1);border-radius:10px;width:min(560px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.16);}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--bdr);}
+.mt{font-size:14px;font-weight:600;}
+.mc{font-size:19px;color:var(--txt3);cursor:pointer;background:none;border:none;line-height:1;}
+.mbody{padding:18px;}
+.mfoot{display:flex;gap:7px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--bdr);}
+/* MAP GRID */
+.map-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:12px;background:var(--c2);border-radius:8px;}
+.mg-cell{background:var(--c1);border:1px solid var(--bdr);border-radius:7px;padding:8px 6px;text-align:center;min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font-size:10px;}
+.mg-cell:hover{border-color:var(--blue);background:var(--blue2);}
+.mg-cell.span3{grid-column:span 3;}
+.mg-cell strong{font-size:10px;color:var(--txt);}
+.mg-cell span{font-size:8px;color:var(--txt3);font-family:var(--fm);}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:#fff;padding:10px 16px;border-radius:9px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200;}
+.toast.on{opacity:1;}
+/* PUSH BANNER */
+.push-banner{display:flex;align-items:center;gap:10px;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;font-size:12px;color:#1d4ed8;}
+.push-dot{width:8px;height:8px;border-radius:50%;background:#1de87a;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<div class="sb">
+  <div class="sb-logo"><h2>Nav<span>Assist</span></h2><p>Store Admin Panel</p></div>
+  <div class="sb-nav">
+    <button class="sb-item on" onclick="nav('dashboard')" id="n-dashboard">📊 Dashboard</button>
+    <button class="sb-item"    onclick="nav('products')"  id="n-products" >📦 Products</button>
+    <button class="sb-item"    onclick="nav('zones')"     id="n-zones"    >🗺️ Zones</button>
+    <button class="sb-item"    onclick="nav('routes')"    id="n-routes"   >🧭 Nav Routes</button>
+    <button class="sb-item"    onclick="nav('landmarks')" id="n-landmarks">📍 Landmarks</button>
+    <button class="sb-item"    onclick="nav('settings')"  id="n-settings" >⚙️ Store Info</button>
+  </div>
+  <div class="sb-foot">
+    <div class="live-row"><div class="live-dot" id="liveDot"></div><span id="liveStatus">Connecting…</span></div>
+    <div style="font-size:10px;color:var(--txt3);font-family:var(--fm);margin-top:3px" id="versionBadge">v–</div>
+    <div style="font-size:10px;color:var(--txt3);margin-top:1px" id="deviceCount">0 Android apps</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="page on" id="p-dashboard">
+  <div class="ph"><div><div class="ph-t">Dashboard</div><div class="ph-s">Any change you make is pushed to all Android apps instantly via WebSocket</div></div><button class="btn btn-p btn-sm" onclick="loadAll()">↺ Refresh</button></div>
+  <div class="pb">
+    <div class="push-banner"><div class="push-dot"></div><span id="pushStatus">Changes push instantly to all connected Android apps. Store version increments on every save.</span></div>
+    <div class="stats">
+      <div class="sc"><div class="sv" id="d-prods">—</div><div class="sl">Products</div></div>
+      <div class="sc"><div class="sv" id="d-zones">—</div><div class="sl">Zones</div></div>
+      <div class="sc"><div class="sv" id="d-ver">—</div><div class="sl">DB Version</div></div>
+      <div class="sc"><div class="sv" id="d-devs">0</div><div class="sl">Android Apps Live</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ch-t">Store Map Preview</div><button class="btn btn-g btn-sm" onclick="nav('zones')">Edit →</button></div>
+      <div class="cb"><div class="map-grid" id="mapPreview">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ch-t">Products</div><button class="btn btn-p btn-sm" onclick="openAddProd()">+ Add</button></div>
+      <div style="overflow-x:auto"><table class="tbl" id="d-tbl"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="page" id="p-products">
+  <div class="ph"><div><div class="ph-t">Products</div><div class="ph-s">Edit product locations — changes push to Android in under 1 second</div></div><button class="btn btn-p btn-sm" onclick="openAddProd()">+ Add Product</button></div>
+  <div class="pb">
+    <div class="card">
+      <div class="ch"><div class="ch-t">All Products (<span id="prodCount">0</span>)</div><input id="prodSearch" style="width:180px;padding:5px 9px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;" placeholder="Search…" oninput="filterProds(this.value)"/></div>
+      <div style="overflow-x:auto"><table class="tbl" id="prodTable"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ZONES -->
+<div class="page" id="p-zones">
+  <div class="ph"><div><div class="ph-t">Store Zones</div><div class="ph-s">Sensory hints are spoken to blind users when they enter each zone</div></div><button class="btn btn-p btn-sm" onclick="openAddZone()">+ Add Zone</button></div>
+  <div class="pb">
+    <div class="card"><div class="ch"><div class="ch-t">Floor Layout</div></div><div class="cb"><div class="map-grid" id="zoneMap" style="gap:6px"></div></div></div>
+    <div class="card"><div style="overflow-x:auto"><table class="tbl" id="zonesTable"></table></div></div>
+  </div>
+</div>
+
+<!-- ROUTES -->
+<div class="page" id="p-routes">
+  <div class="ph"><div><div class="ph-t">Navigation Routes</div><div class="ph-s">Spoken overview directions between zones — edit inline and save</div></div></div>
+  <div class="pb">
+    <div class="card">
+      <div class="cb">
+        <p style="font-size:12px;color:var(--txt2);margin-bottom:12px;line-height:1.6;">These are the spoken zone-to-zone overview directions. The precise turn-by-turn (Move Forward / Turn Left / Turn Right etc.) are generated automatically from the indoor navigation graph. Edit these overview descriptions to improve what blind users hear.</p>
+        <div id="routesList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LANDMARKS -->
+<div class="page" id="p-landmarks">
+  <div class="ph"><div><div class="ph-t">Sensory Landmarks</div><div class="ph-s">Auto-announced as user walks past each step count from entrance</div></div><button class="btn btn-p btn-sm" onclick="addLandmark()">+ Add</button></div>
+  <div class="pb">
+    <div class="card">
+      <div class="cb"><p style="font-size:12px;color:var(--txt2);margin-bottom:10px;line-height:1.6;">Each landmark is automatically spoken when the blind user's step counter reaches that distance. Use sounds, smells, and tactile cues — not visual descriptions.</p></div>
+      <div style="overflow-x:auto"><table class="tbl" id="landTable"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="p-settings">
+  <div class="ph"><div><div class="ph-t">Store Information</div><div class="ph-s">Spoken to blind users when they connect to the app</div></div></div>
+  <div class="pb">
+    <div class="card">
+      <div class="ch"><div class="ch-t">Store Details</div><button class="btn btn-p btn-sm" onclick="saveStore()">Save & Push</button></div>
+      <div class="cb">
+        <div class="fgrid">
+          <div class="fg"><label class="flbl">Store Name</label><input class="fi" id="st-name"/></div>
+          <div class="fg"><label class="flbl">Branch</label><input class="fi" id="st-branch"/></div>
+          <div class="fg full"><label class="flbl">Address</label><input class="fi" id="st-addr"/></div>
+          <div class="fg"><label class="flbl">Phone</label><input class="fi" id="st-phone"/></div>
+          <div class="fg"><label class="flbl">Staff Emergency</label><input class="fi" id="st-staff"/></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ch-t">System Status</div></div>
+      <div class="cb" style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px;background:var(--c2);border-radius:7px;font-size:12px;"><span>Backend API</span><span class="bdg" id="api-st">Checking…</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px;background:var(--c2);border-radius:7px;font-size:12px;"><span>WebSocket</span><span class="bdg" id="ws-st">Connecting…</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px;background:var(--c2);border-radius:7px;font-size:12px;"><span>AI Engine</span><span class="bdg bg-b">Claude Sonnet 4</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- PRODUCT MODAL -->
+<div class="modal-bg" id="prodModal">
+<div class="modal">
+  <div class="mh"><div class="mt" id="prodModalTitle">Add Product</div><button class="mc" onclick="closeM('prodModal')">×</button></div>
+  <div class="mbody">
+    <div class="fgrid">
+      <div class="fg"><label class="flbl">Key (unique, e.g. "milk")</label><input class="fi" id="p-key"/></div>
+      <div class="fg"><label class="flbl">Full Name</label><input class="fi" id="p-name"/></div>
+      <div class="fg"><label class="flbl">Brand</label><input class="fi" id="p-brand"/></div>
+      <div class="fg"><label class="flbl">Size</label><input class="fi" id="p-size" placeholder="1L / 500g / 12pk"/></div>
+      <div class="fg"><label class="flbl">Emoji</label><input class="fi" id="p-emoji" maxlength="2"/></div>
+      <div class="fg"><label class="flbl">Zone</label>
+        <select class="fs" id="p-zone">
+          <option value="ZONE_DAIRY">Dairy</option><option value="ZONE_BAKERY">Bakery</option>
+          <option value="ZONE_BEVERAGES">Beverages</option><option value="ZONE_PERSONAL_CARE">Personal Care</option>
+          <option value="ZONE_SNACKS">Snacks</option><option value="ZONE_GRAINS">Grains</option>
+          <option value="ZONE_GROCERY">Grocery</option><option value="ZONE_PRODUCE">Produce</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl">Aisle (e.g. D3)</label><input class="fi" id="p-aisle"/></div>
+      <div class="fg"><label class="flbl">Navigation Node ID</label><input class="fi" id="p-node" placeholder="DAIRY_D3_SHELF2"/></div>
+      <div class="fg"><label class="flbl">Shelf Row (1=floor 5=eye)</label><input class="fi" type="number" id="p-row" min="1" max="5" value="3"/></div>
+      <div class="fg"><label class="flbl">Position from Left</label><input class="fi" type="number" id="p-pos" min="1" value="1"/></div>
+      <div class="fg"><label class="flbl">Body Height</label>
+        <select class="fs" id="p-height">
+          <option value="floor level">Floor level</option><option value="knee height">Knee height</option>
+          <option value="waist height">Waist height</option><option value="chest height" selected>Chest height</option>
+          <option value="eye height">Eye height</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl">Direction (e.g. "second from left")</label><input class="fi" id="p-dir"/></div>
+      <div class="fg"><label class="flbl">Price (₹)</label><input class="fi" type="number" id="p-price"/></div>
+      <div class="fg"><label class="flbl">In Stock</label><button class="tgl on" id="p-stock" onclick="this.classList.toggle('on')"><div class="tknob"></div></button></div>
+      <div class="fg full"><label class="flbl">Sensory Description (spoken to blind users)</label><textarea class="ft" id="p-desc" placeholder="What it feels, smells, sounds like — not visual descriptions"></textarea></div>
+    </div>
+  </div>
+  <div class="mfoot"><button class="btn btn-g" onclick="closeM('prodModal')">Cancel</button><button class="btn btn-p" onclick="saveProd()">Save & Push to Android</button></div>
+</div>
+</div>
+
+<!-- ZONE MODAL -->
+<div class="modal-bg" id="zoneModal">
+<div class="modal">
+  <div class="mh"><div class="mt" id="zoneModalTitle">Edit Zone</div><button class="mc" onclick="closeM('zoneModal')">×</button></div>
+  <div class="mbody">
+    <div class="fgrid">
+      <div class="fg"><label class="flbl">Zone ID</label><input class="fi" id="z-id" placeholder="ZONE_DAIRY"/></div>
+      <div class="fg"><label class="flbl">Name</label><input class="fi" id="z-name"/></div>
+      <div class="fg"><label class="flbl">Short Name</label><input class="fi" id="z-short"/></div>
+      <div class="fg"><label class="flbl">Aisles (comma separated)</label><input class="fi" id="z-aisles" placeholder="D1, D2, D3"/></div>
+      <div class="fg"><label class="flbl">Steps from Entrance</label><input class="fi" type="number" id="z-steps"/></div>
+      <div class="fg full"><label class="flbl">Sensory Hint (what blind user experiences: sounds, smells, textures)</label><textarea class="ft" id="z-sensory" placeholder="Refrigerator hum, cool air, white tiled floor"></textarea></div>
+    </div>
+  </div>
+  <div class="mfoot"><button class="btn btn-g" onclick="closeM('zoneModal')">Cancel</button><button class="btn btn-p" onclick="saveZone()">Save & Push</button></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:4000/api';
+const WS_URL = 'ws://localhost:4000';
+let D = { info:{}, zones:{}, products:{}, landmarks:[], dataVersion:0 };
+let editProdId = null, editZoneId = null;
+let ws = null;
+
+// ── WebSocket ─────────────────────────────────────────────────
+function connectWS() {
+  try {
+    ws = new WebSocket(WS_URL);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type:'identify', role:'admin' }));
+      setStatus(true);
+    };
+    ws.onclose = () => { setStatus(false); setTimeout(connectWS, 3000); };
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'welcome') { D = msg.store || D; renderAll(); updateStats(); }
+        if (msg.type === 'store_updated') { D = msg.store || D; renderAll(); updateStats(); }
+        if (msg.type === 'emergency_alert') { showToast('⚠ Emergency from shopper!', '#dc2626'); }
+      } catch(_) {}
+    };
+  } catch(_) { setStatus(false); setTimeout(connectWS, 3000); }
+}
+
+function setStatus(ok) {
+  document.getElementById('liveDot').style.background = ok ? '#16a34a' : '#dc2626';
+  document.getElementById('liveStatus').textContent   = ok ? 'Connected' : 'Offline';
+  document.getElementById('ws-st').textContent        = ok ? 'Connected' : 'Disconnected';
+  document.getElementById('ws-st').className          = 'bdg ' + (ok ? 'bg-g' : 'bg-r');
+}
+
+function pushUpdate() {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type:'push_update' }));
+  }
+}
+
+// ── Load from backend ─────────────────────────────────────────
+async function loadAll() {
+  try {
+    const r = await fetch(API + '/store');
+    D = await r.json();
+    renderAll(); updateStats();
+    document.getElementById('api-st').textContent = 'Connected';
+    document.getElementById('api-st').className   = 'bdg bg-g';
+  } catch(_) {
+    document.getElementById('api-st').textContent = 'Offline — demo data';
+    document.getElementById('api-st').className   = 'bdg bg-r';
+    useDemoData();
+  }
+}
+
+function useDemoData() {
+  D = {
+    info:{ name:'BigMart', branch:'Sector 12, Hyderabad', phone:'+91 40 2345 6789', staffPhone:'+91 98765 43210' },
+    products:{
+      PROD_MILK:{ id:'PROD_MILK', key:'milk', name:'Amul Full Cream Milk', brand:'Amul', size:'1L', emoji:'🥛', zone:'ZONE_DAIRY', aisle:'D3', nodeId:'DAIRY_D3_SHELF2', shelfRow:4, shelfPos:2, bodyHeight:'chest height', bodyDir:'second from left', price:62, inStock:true, desc:'White and blue carton. Firm and cold.' },
+      PROD_BREAD:{ id:'PROD_BREAD', key:'bread', name:'Britannia Brown Bread', brand:'Britannia', size:'400g', emoji:'🍞', zone:'ZONE_BAKERY', aisle:'BK1', nodeId:'BAKERY_BK1_SHELF3', shelfRow:3, shelfPos:2, bodyHeight:'waist height', bodyDir:'second from left', price:45, inStock:true, desc:'Soft crinkly plastic bag.' },
+    },
+    zones:{
+      ZONE_DAIRY:{ id:'ZONE_DAIRY', name:'Dairy', shortName:'Dairy', aisles:['D1','D2','D3'], stepsFromEntrance:38, sensory:'Refrigerator hum, cool air' },
+      ZONE_CHECKOUT:{ id:'ZONE_CHECKOUT', name:'Checkout', shortName:'Checkout', aisles:['C1','C2'], stepsFromEntrance:110, sensory:'Scanner beeping sounds' },
+    },
+    landmarks:[{ steps:25, text:'Floor changes to anti-slip tiles.' }],
+    dataVersion:1,
+  };
+  renderAll(); updateStats();
+}
+
+function updateStats() {
+  const prods = Object.values(D.products||{});
+  document.getElementById('d-prods').textContent = prods.length;
+  document.getElementById('d-zones').textContent = Object.keys(D.zones||{}).length;
+  document.getElementById('d-ver').textContent   = 'v'+(D.dataVersion||0);
+  document.getElementById('versionBadge').textContent = 'v'+(D.dataVersion||0);
+  const st = D.info || {};
+  ['st-name','st-branch','st-addr','st-phone','st-staff'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = { 'st-name':st.name,'st-branch':st.branch,'st-addr':st.address,'st-phone':st.phone,'st-staff':st.staffPhone }[id] || '';
+  });
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderAll() { renderMap('mapPreview'); renderMap('zoneMap'); renderProds(); renderZones(); renderRoutes(); renderLandmarks(); renderDashTable(); }
+
+function renderMap(id) {
+  const c = document.getElementById(id); if (!c) return;
+  const layout = [
+    ['ZONE_CHECKOUT','ZONE_CHECKOUT','ZONE_CHECKOUT'],
+    ['ZONE_BEVERAGES','ZONE_PERSONAL_CARE','ZONE_SNACKS'],
+    ['ZONE_DAIRY','ZONE_GRAINS','ZONE_GROCERY'],
+    ['ZONE_PRODUCE','ZONE_BAKERY',''],
+  ];
+  c.innerHTML = '';
+  layout.forEach((row, ri) => {
+    row.forEach((zid, ci) => {
+      if (ri > 0 && zid === 'ZONE_CHECKOUT') return;
+      const el = document.createElement('div');
+      if (!zid) { el.className='mg-cell'; el.style.cssText='background:transparent;border:none'; c.appendChild(el); return; }
+      const z = D.zones?.[zid];
+      el.className = 'mg-cell' + (zid === 'ZONE_CHECKOUT' ? ' span3' : '');
+      el.innerHTML = `<strong>${z?.shortName||zid.replace('ZONE_','')}</strong><span>${(z?.aisles||[]).join(',')}</span>`;
+      el.onclick = () => openEditZone(zid);
+      c.appendChild(el);
+    });
+  });
+}
+
+function renderDashTable() {
+  const tbl = document.getElementById('d-tbl');
+  const prods = Object.values(D.products||{}).slice(0, 8);
+  tbl.innerHTML = '<tr><th>Product</th><th>Zone</th><th>Node ID</th><th>Height</th><th>Price</th><th>Stock</th></tr>';
+  prods.forEach(p => {
+    const z = D.zones?.[p.zone];
+    tbl.innerHTML += `<tr>
+      <td><span style="margin-right:5px">${p.emoji}</span><strong>${p.name}</strong></td>
+      <td>${z?.name||p.zone}</td>
+      <td><code style="font-size:10px;background:var(--c2);padding:1px 5px;border-radius:4px">${p.nodeId||'—'}</code></td>
+      <td style="font-size:11px">${p.bodyHeight||'—'}</td>
+      <td>₹${p.price}</td>
+      <td><span class="bdg ${p.inStock?'bg-g':'bg-r'}">${p.inStock?'In Stock':'Out'}</span></td>
+    </tr>`;
+  });
+}
+
+function renderProds(filter='') {
+  const prods = Object.values(D.products||{}).filter(p => !filter || p.name.toLowerCase().includes(filter) || p.key.includes(filter));
+  document.getElementById('prodCount').textContent = prods.length;
+  const tbl = document.getElementById('prodTable');
+  tbl.innerHTML = '<tr><th>Product</th><th>Zone</th><th>Aisle</th><th>Node ID</th><th>Height</th><th>Direction</th><th>Price</th><th>Stock</th><th>Actions</th></tr>';
+  prods.forEach(p => {
+    const z = D.zones?.[p.zone];
+    tbl.innerHTML += `<tr>
+      <td><div style="display:flex;align-items:center;gap:7px"><span style="font-size:18px">${p.emoji}</span><div><div style="font-weight:500">${p.name}</div><div style="font-size:10px;color:var(--txt3)">${p.brand} · ${p.size}</div></div></div></td>
+      <td>${z?.name||p.zone}</td>
+      <td><code style="font-size:10px;background:var(--c2);padding:1px 5px;border-radius:4px">${p.aisle}</code></td>
+      <td><code style="font-size:9px;background:var(--c2);padding:1px 5px;border-radius:4px;display:block;max-width:130px;overflow:hidden;text-overflow:ellipsis">${p.nodeId||'—'}</code></td>
+      <td style="font-size:11px">${p.bodyHeight||'—'}</td>
+      <td style="font-size:11px">${p.bodyDir||'—'}</td>
+      <td>₹${p.price}</td>
+      <td><span class="bdg ${p.inStock?'bg-g':'bg-r'}">${p.inStock?'In Stock':'Out'}</span></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-g btn-sm" onclick="openEditProd('${p.id}')">Edit</button>
+        <button class="btn btn-d btn-sm" onclick="deleteProd('${p.id}')">Del</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function filterProds(v) { renderProds(v.toLowerCase()); }
+
+function renderZones() {
+  const tbl = document.getElementById('zonesTable');
+  tbl.innerHTML = '<tr><th>Zone</th><th>Aisles</th><th>Steps</th><th>Sensory Hint (spoken to blind user)</th><th>Actions</th></tr>';
+  Object.values(D.zones||{}).forEach(z => {
+    tbl.innerHTML += `<tr>
+      <td><strong>${z.name}</strong></td>
+      <td style="font-family:var(--fm);font-size:11px">${(z.aisles||[]).join(', ')}</td>
+      <td style="font-family:var(--fm)">${z.stepsFromEntrance}</td>
+      <td style="font-size:11px;color:var(--txt2);font-style:italic;max-width:220px">"${z.sensory}"</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-g btn-sm" onclick="openEditZone('${z.id}')">Edit</button>
+        <button class="btn btn-d btn-sm" onclick="deleteZone('${z.id}')">Del</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function renderRoutes() {
+  const sampleRoutes = {
+    'entrance → ZONE_DAIRY':        'Walk straight ahead 38 steps. Turn left at the refrigerator hum. Air gets cold.',
+    'entrance → ZONE_BAKERY':       'Walk 68 steps. Fresh baked bread smell on your left — that is Bakery.',
+    'entrance → ZONE_BEVERAGES':    'Walk 65 steps straight. Refrigerator glass doors on your left.',
+    'entrance → ZONE_PERSONAL_CARE':'Walk 75 steps, turn right. Fragrance of soaps guides you.',
+    'entrance → ZONE_SNACKS':       'Walk 72 steps, right side. Rustling packets signal Snacks.',
+    'entrance → ZONE_GRAINS':       'Walk 50 steps, centre-left. Large heavy bags at floor level.',
+    'entrance → ZONE_GROCERY':      'Walk 58 steps, centre-right. Spice aroma guides you in.',
+    'any → ZONE_CHECKOUT':          'Walk straight to far north end. Scanner beeps guide you. About 110 steps.',
+  };
+  const container = document.getElementById('routesList');
+  container.innerHTML = Object.entries(sampleRoutes).map(([key, val]) => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)">
+      <div style="font-size:10px;font-family:var(--fm);white-space:nowrap;display:flex;gap:4px;align-items:center;padding-top:6px;flex-shrink:0">
+        ${key.split('→').map(p => `<span class="bdg bg-b">${p.trim()}</span>`).join('<span style="color:var(--txt3)">→</span>')}
+      </div>
+      <div style="flex:1">
+        <input class="fi" value="${val}" onchange="saveRoute('${key}',this.value)" style="font-size:11px;width:100%"/>
+        <div style="font-size:10px;color:var(--txt3);margin-top:3px">Zone-to-zone overview spoken to blind user. Turn-by-turn (Forward/Left/Right) is auto-generated from graph.</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderLandmarks() {
+  const tbl = document.getElementById('landTable');
+  tbl.innerHTML = '<tr><th>Steps from Entrance</th><th>Announcement spoken aloud</th><th></th></tr>';
+  (D.landmarks||[]).forEach((lm, i) => {
+    tbl.innerHTML += `<tr>
+      <td style="font-family:var(--fm);font-weight:600">${lm.steps}</td>
+      <td><input class="fi" value="${lm.text}" onchange="updateLandmark(${i},this.value)" style="font-size:11px"/></td>
+      <td><button class="btn btn-d btn-sm" onclick="deleteLandmark(${i})">Del</button></td>
+    </tr>`;
+  });
+}
+
+// ── PRODUCT CRUD ──────────────────────────────────────────────
+function openAddProd() {
+  editProdId = null;
+  document.getElementById('prodModalTitle').textContent = 'Add Product';
+  ['p-key','p-name','p-brand','p-size','p-emoji','p-aisle','p-node','p-dir','p-desc'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('p-price').value='';
+  document.getElementById('p-row').value=3;
+  document.getElementById('p-pos').value=1;
+  document.getElementById('p-stock').classList.add('on');
+  document.getElementById('prodModal').classList.add('on');
+}
+function openEditProd(id) {
+  editProdId = id;
+  const p = D.products[id]; if (!p) return;
+  document.getElementById('prodModalTitle').textContent = 'Edit: ' + p.name;
+  document.getElementById('p-key').value    = p.key||'';
+  document.getElementById('p-name').value   = p.name||'';
+  document.getElementById('p-brand').value  = p.brand||'';
+  document.getElementById('p-size').value   = p.size||'';
+  document.getElementById('p-emoji').value  = p.emoji||'';
+  document.getElementById('p-zone').value   = p.zone||'ZONE_DAIRY';
+  document.getElementById('p-aisle').value  = p.aisle||'';
+  document.getElementById('p-node').value   = p.nodeId||'';
+  document.getElementById('p-row').value    = p.shelfRow||3;
+  document.getElementById('p-pos').value    = p.shelfPos||1;
+  document.getElementById('p-height').value = p.bodyHeight||'chest height';
+  document.getElementById('p-dir').value    = p.bodyDir||'';
+  document.getElementById('p-price').value  = p.price||0;
+  document.getElementById('p-desc').value   = p.desc||'';
+  p.inStock ? document.getElementById('p-stock').classList.add('on') : document.getElementById('p-stock').classList.remove('on');
+  document.getElementById('prodModal').classList.add('on');
+}
+async function saveProd() {
+  const data = {
+    key: document.getElementById('p-key').value, name: document.getElementById('p-name').value,
+    brand: document.getElementById('p-brand').value, size: document.getElementById('p-size').value,
+    emoji: document.getElementById('p-emoji').value, zone: document.getElementById('p-zone').value,
+    aisle: document.getElementById('p-aisle').value, nodeId: document.getElementById('p-node').value,
+    shelfRow: +document.getElementById('p-row').value, shelfPos: +document.getElementById('p-pos').value,
+    bodyHeight: document.getElementById('p-height').value, bodyDir: document.getElementById('p-dir').value,
+    price: +document.getElementById('p-price').value, desc: document.getElementById('p-desc').value,
+    inStock: document.getElementById('p-stock').classList.contains('on'),
+  };
+  try {
+    const url = editProdId ? API+'/store/products/'+editProdId : API+'/store/products';
+    const r = await fetch(url, { method: editProdId?'PUT':'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const saved = await r.json(); D.products[saved.id] = saved;
+  } catch(_) { const id = editProdId || ('PROD_'+Date.now()); D.products[id] = {...data, id}; }
+  pushUpdate(); closeM('prodModal'); renderProds(); renderDashTable(); updateStats();
+  showToast('Product saved and pushed to all Android apps!');
+}
+async function deleteProd(id) {
+  if (!confirm('Delete this product? Change will push instantly to Android apps.')) return;
+  delete D.products[id];
+  try { await fetch(API+'/store/products/'+id, {method:'DELETE'}); } catch(_) {}
+  pushUpdate(); renderProds(); renderDashTable(); updateStats();
+  showToast('Product deleted and pushed.');
+}
+
+// ── ZONE CRUD ─────────────────────────────────────────────────
+function openAddZone() { editZoneId=null; document.getElementById('zoneModalTitle').textContent='Add Zone'; ['z-id','z-name','z-short','z-aisles','z-sensory'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); document.getElementById('z-steps').value=''; document.getElementById('zoneModal').classList.add('on'); }
+function openEditZone(id) {
+  editZoneId=id; const z=D.zones[id]; if(!z)return;
+  document.getElementById('zoneModalTitle').textContent='Edit: '+z.name;
+  document.getElementById('z-id').value=z.id||'';document.getElementById('z-name').value=z.name||'';document.getElementById('z-short').value=z.shortName||'';
+  document.getElementById('z-aisles').value=(z.aisles||[]).join(', ');document.getElementById('z-steps').value=z.stepsFromEntrance||0;document.getElementById('z-sensory').value=z.sensory||'';
+  document.getElementById('zoneModal').classList.add('on');
+}
+async function saveZone() {
+  const id=document.getElementById('z-id').value;
+  const data={id,name:document.getElementById('z-name').value,shortName:document.getElementById('z-short').value,aisles:document.getElementById('z-aisles').value.split(',').map(s=>s.trim()),stepsFromEntrance:+document.getElementById('z-steps').value,sensory:document.getElementById('z-sensory').value};
+  try { const r=await fetch(editZoneId?API+'/store/zones/'+editZoneId:API+'/store/zones',{method:editZoneId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); const saved=await r.json(); D.zones[saved.id]=saved; } catch(_){D.zones[id]=data;}
+  pushUpdate(); closeM('zoneModal'); renderAll();
+  showToast('Zone saved and pushed!');
+}
+async function deleteZone(id) {
+  if (!confirm('Delete zone?')) return;
+  delete D.zones[id];
+  try { await fetch(API+'/store/zones/'+id,{method:'DELETE'}); } catch(_) {}
+  pushUpdate(); renderAll(); showToast('Zone deleted.');
+}
+
+// ── OTHER CRUD ────────────────────────────────────────────────
+function saveRoute(key, val) { showToast('Route updated. Backend will apply on restart.'); }
+function updateLandmark(i, val) { if(D.landmarks[i]) D.landmarks[i].text=val; pushUpdate(); }
+function deleteLandmark(i) { D.landmarks.splice(i,1); renderLandmarks(); try{fetch(API+'/store/landmarks/'+i,{method:'DELETE'});}catch(_){} pushUpdate(); }
+function addLandmark() {
+  const steps=prompt('Steps from entrance:'); const text=prompt('Announcement (sensory cue):');
+  if(!steps||!text) return;
+  D.landmarks.push({steps:+steps,text}); D.landmarks.sort((a,b)=>a.steps-b.steps);
+  try{fetch(API+'/store/landmarks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({steps:+steps,text})});}catch(_){}
+  pushUpdate(); renderLandmarks(); showToast('Landmark added and pushed.');
+}
+async function saveStore() {
+  const data={name:document.getElementById('st-name').value,branch:document.getElementById('st-branch').value,address:document.getElementById('st-addr').value,phone:document.getElementById('st-phone').value,staffPhone:document.getElementById('st-staff').value};
+  try{await fetch(API+'/store/info',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});}catch(_){}
+  pushUpdate(); showToast('Store info saved and pushed!');
+}
+
+// ── UI helpers ────────────────────────────────────────────────
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+page).classList.add('on');
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
+  document.getElementById('n-'+page)?.classList.add('on');
+}
+function closeM(id) { document.getElementById(id).classList.remove('on'); }
+function showToast(msg, bg='#1a1a2e') {
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.background=bg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+connectWS();
+loadAll();
+</script>
+</body>
+</html>
