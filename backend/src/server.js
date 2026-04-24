@@ -22,7 +22,7 @@ app.get('/api/health',  (_req, res) => res.json({ ok: true, time: new Date().toI
 const { handleConnection } = require('./websocket/wsHandler');
 wss.on('connection', (ws) => handleConnection(ws, wss));
 
-const PORT = parseInt(process.env.PORT, 10) || 4000;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('NavAssist backend running on port ' + PORT);
   console.log('REST  : http://0.0.0.0:' + PORT + '/api');
